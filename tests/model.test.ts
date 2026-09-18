@@ -1,0 +1,4 @@
+import { describe, expect, it } from "vitest";
+import { parseModelCsv } from "../worker/model";
+const row=(league:string)=>{const cells=Array(63).fill(""); Object.assign(cells,{9:"E0-001",14:"20/09/2026",15:"15:00",16:"Arsenal",17:"Chelsea",21:"1.91",22:"1.99",44:"55%",45:"25%",46:"20%",60:league,61:"48%",62:"52%"}); return cells.map(value=>`"${value}"`).join(",");};
+describe("model CSV",()=>it("keeps E0 and imports model probabilities plus exact 2.5 fallback prices",()=>{const result=parseModelCsv(`${row("E0")}\n${row("E1")}`); expect(result).toHaveLength(1); expect(result[0].predictions).toHaveLength(5); expect(result[0].predictions.find(item=>item.outcome==="over")?.probability).toBeCloseTo(.52); expect(result[0].predictions.find(item=>item.outcome==="under")?.probability).toBeCloseTo(.48); expect(result[0].fallbackPrices).toEqual([{market:"ou25",outcome:"over",odds:1.91},{market:"ou25",outcome:"under",odds:1.99}]);}));
