@@ -38,7 +38,7 @@ expected return         = model probability × market odds - 1
 
 ## Free-plan budget
 
-Each run makes one seven-day Premier League fixture request and then requests odds only for matched fixtures, capped at twelve: at most thirteen requests. A thirty-minute cron remains below the documented sixty requests/hour and twenty requests/minute limits.
+Each run discovers the current Premier League ID, makes one seven-day fixture request and then requests odds only for matched fixtures, capped at twelve: at most fourteen requests. A thirty-minute cron remains below the documented sixty requests/hour and twenty requests/minute limits.
 
 ## Local verification
 
