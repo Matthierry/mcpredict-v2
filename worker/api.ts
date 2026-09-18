@@ -7,7 +7,9 @@ async function dashboard(env: Env): Promise<Response> {
   const [fixtureResult, predictionResult, comparisonResult, stateResult] = await Promise.all([
     env.DB.prepare("SELECT id, provider_fixture_id, kickoff_utc, home_team, away_team, status, match_state FROM fixtures WHERE datetime(kickoff_utc) >= datetime('now', '-4 hours') ORDER BY datetime(kickoff_utc)").all<any>(),
     env.DB.prepare("SELECT fixture_id, market, outcome, probability * 100 AS model_probability, model_odds FROM model_predictions").all<any>(),
-    env.DB.prepare("SELECT fixture_id, market, outcome, model_probability, model_odds, market_odds, market_probability, edge, expected_return, classification, observed_at, price_source FROM comparisons").all<any>(),
+    env.DB.prepare(`SELECT c.fixture_id, c.market, c.outcome, c.model_probability, c.model_odds, c.market_odds, c.market_probability, c.edge, c.expected_return, c.classification, c.observed_at,
+      (SELECT os.source_price_type FROM odds_snapshots os WHERE os.fixture_id=c.fixture_id AND os.market=c.market AND os.outcome=c.outcome ORDER BY os.id DESC LIMIT 1) AS price_source
+      FROM comparisons c`).all<any>(),
     env.DB.prepare("SELECT key, value FROM site_state").all<{ key: string; value: string }>()
   ]);
   const comparisons = new Map(comparisonResult.results.map(row => [`${row.fixture_id}|${row.market}|${row.outcome}`, row]));
