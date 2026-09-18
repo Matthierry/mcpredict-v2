@@ -10,11 +10,12 @@ const time = (value: string) => new Intl.DateTimeFormat("en-GB", { hour: "2-digi
 
 function OutcomeRow({ item, leader }: { item: OutcomeComparison; leader: boolean }) {
   const positive = (item.edge ?? 0) > 0;
+  const source = item.priceSource === "model_sheet" ? "Sheet exact 2.5" : item.priceSource === "opening" ? "Bet365 opening" : item.priceSource === "latest" ? "Bet365 latest" : null;
   return <div className={`outcome-row ${leader ? "outcome-row--leader" : ""}`}>
     <div className="outcome-name"><span>{item.outcome}</span>{leader && <span className="signal">Model pick</span>}</div>
     <div><small>Model</small><strong className="model">{pct(item.modelProbability)}</strong></div>
     <div><small>Market</small><strong>{pct(item.marketProbability)}</strong></div>
-    <div><small>Price</small><strong>{odds(item.marketOdds)}</strong></div>
+    <div><small>Price</small><strong>{odds(item.marketOdds)}</strong>{source && <span style={{ display: "block", marginTop: 3, color: "#777", fontSize: ".58rem", lineHeight: 1.2 }}>{source}</span>}</div>
     <div><small>Edge</small><strong className={item.edge == null ? "muted" : positive ? "positive" : "negative"}>{pct(item.edge, true)}</strong></div>
     <div><small>EV</small><strong className={item.expectedReturn == null ? "muted" : item.expectedReturn > 0 ? "positive" : "negative"}>{pct(item.expectedReturn, true)}</strong></div>
   </div>;
@@ -23,12 +24,14 @@ function OutcomeRow({ item, leader }: { item: OutcomeComparison; leader: boolean
 function FixtureCard({ fixture, market }: { fixture: FixtureView; market: Market }) {
   const rows = fixture.markets[market] ?? [];
   const leader = rows.reduce<OutcomeComparison | null>((best, row) => !best || row.modelProbability > best.modelProbability ? row : best, null);
+  const exactPriceUnavailable = market === "ou25" && rows.length > 0 && rows.every(row => row.marketOdds == null);
   return <article className="fixture-card">
     <header className="fixture-header">
       <div><span>{day(fixture.kickoffUtc)}</span><strong>{time(fixture.kickoffUtc)}</strong></div>
       <div className="teams"><strong>{fixture.homeTeam}</strong><span>vs</span><strong>{fixture.awayTeam}</strong></div>
-      <span className={`status ${fixture.matchState}`}>{fixture.matchState === "matched" ? "Market matched" : "Awaiting odds"}</span>
+      <span className={`status ${fixture.matchState}`}>{fixture.matchState === "matched" ? "Fixture matched" : "Awaiting fixture match"}</span>
     </header>
+    {exactPriceUnavailable && <div style={{ margin: "10px 12px 0", padding: "10px 12px", border: "1px solid rgba(241,144,20,.25)", borderRadius: 8, background: "rgba(241,144,20,.06)", color: "#caa97c", fontSize: ".72rem" }}>Exact O/U 2.5 price unavailable from both live feed and sheet.</div>}
     {rows.length ? <div className="outcomes">{rows.map(row => <OutcomeRow key={row.outcome} item={row} leader={leader?.outcome === row.outcome} />)}</div> : <div className="empty-market">Model output for this market is not available.</div>}
   </article>;
 }
@@ -53,7 +56,7 @@ export default function App() {
   const highestEdge = Math.max(...(data?.fixtures.flatMap(f => f.markets[market] ?? []).map(row => row.edge ?? -999) ?? [-999]));
 
   return <div className="app-shell">
-    <header className="topbar"><a className="brand" href="/"><span className="brand-mark">MC</span><span><b>MC PREDICT</b><small>v2 · Premier League</small></span></a><div className="live-label"><i /> Bet365 market feed</div></header>
+    <header className="topbar"><a className="brand" href="/"><span className="brand-mark">MC</span><span><b>MC PREDICT</b><small>v2 · Premier League</small></span></a><div className="live-label"><i /> Market comparison feed</div></header>
     <main>
       <section className="hero"><p className="eyebrow">MODEL VERSUS MARKET</p><h1>Track the gap between<br /><span>price and probability.</span></h1><p>Independent Premier League forecasts compared with the latest available Bet365 prices.</p></section>
       {loading && <div className="notice">Loading the latest market comparison…</div>}
@@ -61,7 +64,7 @@ export default function App() {
       {data && <>
         <section className="kpis">
           <div><small>Upcoming fixtures</small><strong>{data.diagnostics.fixtureCount}</strong></div>
-          <div><small>Market matched</small><strong>{data.diagnostics.matchedCount}</strong></div>
+          <div><small>Fixtures matched</small><strong>{data.diagnostics.matchedCount}</strong></div>
           <div><small>Positive edges</small><strong>{opportunities}</strong></div>
           <div><small>Highest edge</small><strong className="positive">{highestEdge > -999 ? pct(highestEdge, true) : "—"}</strong></div>
         </section>
