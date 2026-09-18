@@ -21,21 +21,26 @@ async function apiRequest<T>(path: string, apiKey: string, baseUrl = DEFAULT_BAS
 interface LeagueSummary {
   id: number;
   name: string;
+  short_name?: string;
   country?: { code?: string; name?: string };
 }
 
 async function resolvePremierLeagueId(apiKey: string, configuredId: string, baseUrl?: string): Promise<string> {
   const leagues = await apiRequest<LeagueSummary[]>(
-    "/leagues?country=GB-ENG&search=Premier%20League&popular=1&per_page=100",
+    "/leagues?country=GB-ENG&per_page=100",
     apiKey,
     baseUrl
   );
   const configured = leagues.find(league => String(league.id) === configuredId);
-  const premierLeague = configured ?? leagues.find(league =>
-    league.name.toLowerCase() === "premier league" &&
-    (league.country?.code?.toUpperCase() === "GB-ENG" || league.country?.name?.toLowerCase() === "england")
-  );
-  if (!premierLeague) throw new Error("Football API did not return the English Premier League in its league catalogue");
+  const premierLeague = configured ?? leagues.find(league => {
+    const name = league.name.toLowerCase();
+    const shortName = league.short_name?.toLowerCase();
+    return shortName === "epl" || name === "premier league" || name.includes("premier league");
+  });
+  if (!premierLeague) {
+    const available = leagues.slice(0, 12).map(league => `${league.name} [${league.short_name ?? "no short name"}] id=${league.id}`).join(", ");
+    throw new Error(`Football API did not return an identifiable English Premier League. English catalogue: ${available || "empty"}`);
+  }
   return String(premierLeague.id);
 }
 
