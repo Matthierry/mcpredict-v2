@@ -11,6 +11,7 @@ export interface OutcomeComparison {
   expectedReturn: number | null;
   classification: string | null;
   observedAt: string | null;
+  priceSource: "opening" | "latest" | "model_sheet" | null;
 }
 
 export interface FixtureView {
