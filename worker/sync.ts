@@ -52,10 +52,10 @@ export async function runSync(env: Env): Promise<Record<string, number>> {
           const modelProbability = modelProbabilities[outcome];
           if (modelProbability == null) continue;
           const value = calculateValue(modelProbability, marketOdds, fair.probabilities[outcome], fair.overround);
-          await env.DB.prepare(`INSERT INTO comparisons (fixture_id, market, outcome, model_probability, model_odds, market_odds, market_probability, overround, edge, expected_return, classification, observed_at, price_source)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(fixture_id, market, outcome) DO UPDATE SET model_probability=excluded.model_probability, model_odds=excluded.model_odds, market_odds=excluded.market_odds, market_probability=excluded.market_probability, overround=excluded.overround, edge=excluded.edge, expected_return=excluded.expected_return, classification=excluded.classification, observed_at=excluded.observed_at, price_source=excluded.price_source`)
-            .bind(model.marketId, set.market, outcome, modelProbability * 100, 1 / modelProbability, marketOdds, value.marketProbability, value.overround, value.edge, value.expectedReturn, value.classification, observedAt, set.source).run();
+          await env.DB.prepare(`INSERT INTO comparisons (fixture_id, market, outcome, model_probability, model_odds, market_odds, market_probability, overround, edge, expected_return, classification, observed_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(fixture_id, market, outcome) DO UPDATE SET model_probability=excluded.model_probability, model_odds=excluded.model_odds, market_odds=excluded.market_odds, market_probability=excluded.market_probability, overround=excluded.overround, edge=excluded.edge, expected_return=excluded.expected_return, classification=excluded.classification, observed_at=excluded.observed_at`)
+            .bind(model.marketId, set.market, outcome, modelProbability * 100, 1 / modelProbability, marketOdds, value.marketProbability, value.overround, value.edge, value.expectedReturn, value.classification, observedAt).run();
         }
       }
     }
