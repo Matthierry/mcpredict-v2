@@ -18,7 +18,29 @@ async function apiRequest<T>(path: string, apiKey: string, baseUrl = DEFAULT_BAS
   return body.data as T;
 }
 
-export async function fetchUpcomingFixtures(apiKey: string, leagueId: string, baseUrl?: string, days = 7): Promise<ProviderFixture[]> {
+interface LeagueSummary {
+  id: number;
+  name: string;
+  country?: { code?: string; name?: string };
+}
+
+async function resolvePremierLeagueId(apiKey: string, configuredId: string, baseUrl?: string): Promise<string> {
+  const leagues = await apiRequest<LeagueSummary[]>(
+    "/leagues?country=GB-ENG&search=Premier%20League&popular=1&per_page=100",
+    apiKey,
+    baseUrl
+  );
+  const configured = leagues.find(league => String(league.id) === configuredId);
+  const premierLeague = configured ?? leagues.find(league =>
+    league.name.toLowerCase() === "premier league" &&
+    (league.country?.code?.toUpperCase() === "GB-ENG" || league.country?.name?.toLowerCase() === "england")
+  );
+  if (!premierLeague) throw new Error("Football API did not return the English Premier League in its league catalogue");
+  return String(premierLeague.id);
+}
+
+export async function fetchUpcomingFixtures(apiKey: string, configuredLeagueId: string, baseUrl?: string, days = 7): Promise<ProviderFixture[]> {
+  const leagueId = await resolvePremierLeagueId(apiKey, configuredLeagueId, baseUrl);
   const start = Math.floor(Date.now() / 1000);
   const end = Math.floor((Date.now() + days * 86_400_000) / 1000);
   const data = await apiRequest<ProviderFixture[]>(
