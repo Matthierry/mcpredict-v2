@@ -11,15 +11,14 @@ async function apiRequest<T>(path: string, apiKey: string, baseUrl = DEFAULT_BAS
 }
 
 export async function fetchUpcomingFixtures(apiKey: string, leagueId: string, baseUrl?: string, days = 7): Promise<ProviderFixture[]> {
-  const fixtures: ProviderFixture[] = [];
-  const now = Date.now();
-  for (let offset = 0; offset < days; offset++) {
-    const start = Math.floor((now + offset * 86_400_000) / 1000);
-    const end = Math.floor((now + (offset + 1) * 86_400_000) / 1000);
-    const data = await apiRequest<ProviderFixture[]>(`/fixtures?start_time=${start}&end_time=${end}&league=${encodeURIComponent(leagueId)}&status=scheduled&per_page=100`, apiKey, baseUrl);
-    fixtures.push(...data);
-  }
-  return [...new Map(fixtures.map(fixture => [fixture.id, fixture])).values()];
+  const start = Math.floor(Date.now() / 1000);
+  const end = Math.floor((Date.now() + days * 86_400_000) / 1000);
+  const data = await apiRequest<ProviderFixture[]>(
+    `/leagues/${encodeURIComponent(leagueId)}/fixtures?start_time=${start}&end_time=${end}&status=scheduled&order=asc&per_page=100`,
+    apiKey,
+    baseUrl
+  );
+  return [...new Map(data.map(fixture => [fixture.id, fixture])).values()];
 }
 
 function completePrices(candidate: Record<string, number> | null | undefined, outcomes: string[]): candidate is Record<string, number> {
