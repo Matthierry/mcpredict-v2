@@ -4,10 +4,18 @@ const DEFAULT_BASE_URL = "https://api.5dollarfootballapi.com/v1";
 
 async function apiRequest<T>(path: string, apiKey: string, baseUrl = DEFAULT_BASE_URL): Promise<T> {
   const response = await fetch(`${baseUrl}${path}`, { headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" } });
-  if (!response.ok) throw new Error(`Football API ${path} returned HTTP ${response.status}`);
-  const body = await response.json() as { success: number; data: T; error?: { message?: string } };
-  if (!body.success) throw new Error(body.error?.message ?? "Football API request failed");
-  return body.data;
+  const text = await response.text();
+  let body: { success?: number; data?: T; error?: { code?: string; message?: string } } = {};
+  try {
+    body = JSON.parse(text) as typeof body;
+  } catch {
+    // Preserve a useful HTTP error below when the provider returns a non-JSON response.
+  }
+  if (!response.ok || !body.success) {
+    const providerDetail = [body.error?.code, body.error?.message].filter(Boolean).join(": ");
+    throw new Error(`Football API ${path} returned HTTP ${response.status}${providerDetail ? ` (${providerDetail})` : ""}`);
+  }
+  return body.data as T;
 }
 
 export async function fetchUpcomingFixtures(apiKey: string, leagueId: string, baseUrl?: string, days = 7): Promise<ProviderFixture[]> {
