@@ -8,6 +8,7 @@ The project is deliberately separate from `Matthierry/MCPredict.github.io`; it c
 
 - Premier League (`E0`) first, with competition-aware tables ready for expansion.
 - Bet365 pre-match Match Result and exact Over/Under 2.5 prices.
+- When the Free API headline goal line is not exactly 2.5, use the existing MC Predict sheet's exact O/U 2.5 prices as a clearly labelled fallback. The API's full line-history endpoint requires Ultra.
 - Fair model odds, de-vigged market probability, available price, edge and expected return.
 - Value and Probability views plus timestamped snapshots for later CLV analysis.
 - Private Cloudflare Access beta at `v2-beta.mcpredict.com`.
