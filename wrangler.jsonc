@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "mcpredict-v2-beta",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-09-18",
+  "assets": { "directory": "./dist", "binding": "ASSETS", "not_found_handling": "single-page-application", "run_worker_first": ["/api/*"] },
+  "triggers": { "crons": ["*/30 * * * *"] },
+  "d1_databases": [{ "binding": "DB", "database_name": "mcpredict-v2-beta-db", "database_id": "REPLACE_WITH_D1_DATABASE_ID", "migrations_dir": "migrations" }],
+  "vars": {
+    "ENVIRONMENT": "beta",
+    "FOOTBALL_API_LEAGUE_ID": "3120672213",
+    "MODEL_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_1dSqKC6BUuykrL9QA5_fwiIEodU3jXBCskHCA7uVU-EYnHusQWZhMFwZXNvk2bFlElmsQHZ3b4n2/pub?gid=2036795967&single=true&output=csv"
+  },
+  "routes": [{ "pattern": "v2-beta.mcpredict.com", "custom_domain": true }]
+}
