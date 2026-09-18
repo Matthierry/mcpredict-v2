@@ -7,7 +7,7 @@ async function dashboard(env: Env): Promise<Response> {
   const [fixtureResult, predictionResult, comparisonResult, stateResult] = await Promise.all([
     env.DB.prepare("SELECT id, provider_fixture_id, kickoff_utc, home_team, away_team, status, match_state FROM fixtures WHERE datetime(kickoff_utc) >= datetime('now', '-4 hours') ORDER BY datetime(kickoff_utc)").all<any>(),
     env.DB.prepare("SELECT fixture_id, market, outcome, probability * 100 AS model_probability, model_odds FROM model_predictions").all<any>(),
-    env.DB.prepare("SELECT fixture_id, market, outcome, model_probability, model_odds, market_odds, market_probability, edge, expected_return, classification, observed_at FROM comparisons").all<any>(),
+    env.DB.prepare("SELECT fixture_id, market, outcome, model_probability, model_odds, market_odds, market_probability, edge, expected_return, classification, observed_at, price_source FROM comparisons").all<any>(),
     env.DB.prepare("SELECT key, value FROM site_state").all<{ key: string; value: string }>()
   ]);
   const comparisons = new Map(comparisonResult.results.map(row => [`${row.fixture_id}|${row.market}|${row.outcome}`, row]));
@@ -17,7 +17,7 @@ async function dashboard(env: Env): Promise<Response> {
     const markets: Record<string, any[]> = { "1x2": [], ou25: [] };
     for (const prediction of predictions.get(row.id) ?? []) {
       const comparison = comparisons.get(`${row.id}|${prediction.market}|${prediction.outcome}`);
-      markets[prediction.market].push({ outcome: prediction.outcome, modelProbability: comparison?.model_probability ?? prediction.model_probability, modelOdds: comparison?.model_odds ?? prediction.model_odds, marketOdds: comparison?.market_odds ?? null, marketProbability: comparison?.market_probability ?? null, edge: comparison?.edge ?? null, expectedReturn: comparison?.expected_return ?? null, classification: comparison?.classification ?? null, observedAt: comparison?.observed_at ?? null });
+      markets[prediction.market].push({ outcome: prediction.outcome, modelProbability: comparison?.model_probability ?? prediction.model_probability, modelOdds: comparison?.model_odds ?? prediction.model_odds, marketOdds: comparison?.market_odds ?? null, marketProbability: comparison?.market_probability ?? null, edge: comparison?.edge ?? null, expectedReturn: comparison?.expected_return ?? null, classification: comparison?.classification ?? null, observedAt: comparison?.observed_at ?? null, priceSource: comparison?.price_source ?? null });
     }
     return { id: row.id, providerFixtureId: row.provider_fixture_id, kickoffUtc: row.kickoff_utc, homeTeam: row.home_team, awayTeam: row.away_team, status: row.status, matchState: row.match_state, markets };
   });
