@@ -21,6 +21,7 @@ export interface ModelFixture {
   awayTeam: string;
   league: string;
   predictions: Array<{ market: Market; outcome: Outcome; probability: number }>;
+  fallbackPrices: Array<{ market: Market; outcome: Outcome; odds: number }>;
 }
 
 export interface ProviderFixture {
@@ -35,5 +36,5 @@ export interface PriceSet {
   market: Market;
   prices: Partial<Record<Outcome, number>>;
   line: number | null;
-  source: "opening" | "latest";
+  source: "opening" | "latest" | "model_sheet";
 }
